@@ -1,0 +1,21 @@
+#root {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.main-title {
+    background-color: #aa2b1d;
+    padding: 1px 15px;
+    border-radius: 10px;
+    box-shadow: 1px;
+}
+
+.main-body {
+    background-color: #aa2b1d;
+    padding: 1px 15px;
+    border-radius: 10px;
+    box-shadow: 1px;
+    margin: 10px;
+}
