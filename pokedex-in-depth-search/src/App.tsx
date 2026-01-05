@@ -1,6 +1,7 @@
 import "./App.css";
 import "./FilterOptions";
 import FilterOptions from "./FilterOptions";
+import PokemonList from "./PokemonList";
 
 function App() {
     return (
@@ -10,6 +11,7 @@ function App() {
             </div>
             <div className="main-body">
                 <FilterOptions></FilterOptions>
+                <PokemonList></PokemonList>
             </div>
         </>
     );
