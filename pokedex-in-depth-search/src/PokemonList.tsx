@@ -1,205 +1,124 @@
 import "./PokemonList.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import type { FilterState, PokemonSlot, PokemonApiResponse } from "./types";
 
-function PokemonList(/*filterRequest: string */) {
-    const [pokemonList, setPokemonList] = useState();
-    const [activeFilter, setActiveFilter] = useState("");
+interface PokemonData {
+    name: string;
+    types: string[];
+    abilities: string[];
+}
+
+interface Props {
+    activeFilter: FilterState;
+}
+
+function PokemonList({ activeFilter }: Props) {
+    const [pokemonList, setPokemonList] = useState<PokemonData[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        // Se não tiver filtro selecionado ou valor vazio, não busca nada (ou busca todos)
+        if (activeFilter.type === "none" || !activeFilter.value) {
+            return;
+        }
+
+        const fetchPokemon = async () => {
+            setIsLoading(true);
+            setPokemonList([]); // Limpa a lista anterior
+
+            try {
+                let urlsToFetch: string[] = [];
+
+                if (activeFilter.type === "name") {
+                    urlsToFetch = [
+                        `https://pokeapi.co/api/v2/pokemon/${activeFilter.value.toLowerCase()}`,
+                    ];
+                }
+
+                // ESTRATÉGIA 2: Buscar por Tipo (Retorna lista de referências)
+                else if (activeFilter.type === "has-type") {
+                    // Nota: no seu types.tsx está "type", no FilterOptions verifique se bate o value
+                    const res = await fetch(
+                        `https://pokeapi.co/api/v2/type/${activeFilter.value}`
+                    );
+                    const data = await res.json();
+                    // A API retorna objetos { pokemon: { name, url } }
+                    // Vamos pegar apenas os primeiros 20 para não travar o navegador fazendo 100 requests de uma vez
+                    urlsToFetch = data.pokemon
+                        .slice(0, 20)
+                        .map((p: PokemonSlot) => p.pokemon.url);
+                }
+
+                // ESTRATÉGIA 3: Buscar por Habilidade
+                else if (activeFilter.type === "has-ability") {
+                    const res = await fetch(
+                        `https://pokeapi.co/api/v2/ability/${activeFilter.value}`
+                    );
+                    const data = await res.json();
+                    urlsToFetch = data.pokemon
+                        .slice(0, 20)
+                        .map((p: PokemonSlot) => p.pokemon.url);
+                }
+
+                // AGORA: Fazemos o fetch dos DETALHES de cada URL encontrada
+                // Isso é necessário porque a busca por tipo/habilidade não retorna os stats, só o nome.
+                const detailsPromises = urlsToFetch.map((url) =>
+                    fetch(url).then((r) => r.json())
+                );
+                const detailsRaw = await Promise.all(detailsPromises);
+
+                // Formatamos para o nosso Estado
+                const formattedData: PokemonData[] = detailsRaw.map(
+                    (data: PokemonApiResponse) => ({
+                        name: data.name,
+                        types: data.types.map((t) => t.type.name),
+                        abilities: data.abilities.map(
+                            (a) => a.ability.name
+                        ),
+                    })
+                );
+
+                setPokemonList(formattedData);
+            } catch (error) {
+                console.error("Erro ao buscar pokémon:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchPokemon();
+    }, [activeFilter]); // Roda sempre que o filtro mudar
 
     return (
         <div className="pokemon-table">
-            <table>
-                <tr>
-                    <th>Name</th>
-                    <th>Type 1</th>
-                    <th>Type 2</th>
-                    <th>Ability 1</th>
-                    <th>Ability 2</th>
-                    <th>Hidden Ability</th>
-                    <th>Generation</th>
-                </tr>
-                <tr>
-                    <td>Bulbasaur</td>
-                    <td>Grass</td>
-                    <td>Poison</td>
-                    <td>Overgrow</td>
-                    <td></td>
-                    <td>Chlorophyll</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Charmander</td>
-                    <td>Fire</td>
-                    <td></td>
-                    <td>Blaze</td>
-                    <td></td>
-                    <td>Solar Power</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Squirtle</td>
-                    <td>Water</td>
-                    <td></td>
-                    <td>Torrent</td>
-                    <td></td>
-                    <td>Rain Dish</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Pikachu</td>
-                    <td>Electric</td>
-                    <td></td>
-                    <td>Static</td>
-                    <td></td>
-                    <td>Lightning Rod</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Jigglypuff</td>
-                    <td>Normal</td>
-                    <td>Fairy</td>
-                    <td>Cute Charm</td>
-                    <td>Competitive</td>
-                    <td>Friend Guard</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Gengar</td>
-                    <td>Ghost</td>
-                    <td>Poison</td>
-                    <td>Cursed Body</td>
-                    <td></td>
-                    <td></td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Onix</td>
-                    <td>Rock</td>
-                    <td>Ground</td>
-                    <td>Rock Head</td>
-                    <td>Sturdy</td>
-                    <td>Weak Armor</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Alakazam</td>
-                    <td>Psychic</td>
-                    <td></td>
-                    <td>Synchronize</td>
-                    <td>Inner Focus</td>
-                    <td>Magic Guard</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Machamp</td>
-                    <td>Fighting</td>
-                    <td></td>
-                    <td>Guts</td>
-                    <td>No Guard</td>
-                    <td>Steadfast</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Snorlax</td>
-                    <td>Normal</td>
-                    <td></td>
-                    <td>Immunity</td>
-                    <td>Thick Fat</td>
-                    <td>Gluttony</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Bulbasaur</td>
-                    <td>Grass</td>
-                    <td>Poison</td>
-                    <td>Overgrow</td>
-                    <td></td>
-                    <td>Chlorophyll</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Charmander</td>
-                    <td>Fire</td>
-                    <td></td>
-                    <td>Blaze</td>
-                    <td></td>
-                    <td>Solar Power</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Squirtle</td>
-                    <td>Water</td>
-                    <td></td>
-                    <td>Torrent</td>
-                    <td></td>
-                    <td>Rain Dish</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Pikachu</td>
-                    <td>Electric</td>
-                    <td></td>
-                    <td>Static</td>
-                    <td></td>
-                    <td>Lightning Rod</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Jigglypuff</td>
-                    <td>Normal</td>
-                    <td>Fairy</td>
-                    <td>Cute Charm</td>
-                    <td>Competitive</td>
-                    <td>Friend Guard</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Gengar</td>
-                    <td>Ghost</td>
-                    <td>Poison</td>
-                    <td>Cursed Body</td>
-                    <td></td>
-                    <td></td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Onix</td>
-                    <td>Rock</td>
-                    <td>Ground</td>
-                    <td>Rock Head</td>
-                    <td>Sturdy</td>
-                    <td>Weak Armor</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Alakazam</td>
-                    <td>Psychic</td>
-                    <td></td>
-                    <td>Synchronize</td>
-                    <td>Inner Focus</td>
-                    <td>Magic Guard</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Machamp</td>
-                    <td>Fighting</td>
-                    <td></td>
-                    <td>Guts</td>
-                    <td>No Guard</td>
-                    <td>Steadfast</td>
-                    <td>Generation I</td>
-                </tr>
-                <tr>
-                    <td>Snorlax</td>
-                    <td>Normal</td>
-                    <td></td>
-                    <td>Immunity</td>
-                    <td>Thick Fat</td>
-                    <td>Gluttony</td>
-                    <td>Generation I</td>
-                </tr>
-                # Stand-in for now, will be replaced with dynamic data from the
-                API later
-            </table>
+            {isLoading && <p>Carregando Pokémons...</p>}
+
+            {!isLoading && pokemonList.length === 0 && activeFilter.value && (
+                <p>Nenhum Pokémon encontrado.</p>
+            )}
+
+            {!isLoading && pokemonList.length > 0 && (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Types</th>
+                            <th>Abilities</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pokemonList.map((poke) => (
+                            <tr key={poke.name}>
+                                <td style={{ textTransform: "capitalize" }}>
+                                    {poke.name}
+                                </td>
+                                <td>{poke.types.join(", ")}</td>
+                                <td>{poke.abilities.join(", ")}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 }

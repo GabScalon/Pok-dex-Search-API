@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { FilterRequest, FilterType } from "./App";
+import type { FilterType } from "./types";
 
 interface Props {
     onFilterChange: (type: FilterType, value: string) => void;
 }
 
 function FilterOptions({ onFilterChange }: Props) {
-    const [radio, setRadio] = useState("name");
+    const [radio, setRadio] = useState<FilterType>("name");
     const [types, setTypes] = useState<string[]>([]);
     const [isLoadingTypes, setIsLoadingTypes] = useState(false);
     const [abilities, setAbilities] = useState<string[]>([]);
@@ -17,7 +17,8 @@ function FilterOptions({ onFilterChange }: Props) {
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setRadio(e.target.value);
+        const newValue = e.target.value as FilterType;
+        setRadio(newValue);
 
         if (e.target.value === "has-type") {
             handleHasTypeSelect();
@@ -130,6 +131,7 @@ function FilterOptions({ onFilterChange }: Props) {
                         type="text"
                         placeholder="Type the pokémon's name..."
                         id="enter-pokemon-name"
+                        onChange={handleValueChange}
                     ></input>
                 )}
 
@@ -137,7 +139,8 @@ function FilterOptions({ onFilterChange }: Props) {
                     (isLoadingTypes ? (
                         <p>Loading types...</p>
                     ) : (
-                        <select>
+                        <select onChange={handleValueChange}>
+                            <option value="">Select a type</option>
                             {types.map((type) => (
                                 <option key={type} value={type}>
                                     {type}
@@ -151,14 +154,15 @@ function FilterOptions({ onFilterChange }: Props) {
                         <p>Loading types...</p>
                     ) : (
                         <>
-                            <select>
+                            <select onChange={handleValueChange}>
+                                <option value="">Select type 1</option>
                                 {types.map((type) => (
                                     <option key={type} value={type}>
                                         {type}
                                     </option>
                                 ))}
                             </select>
-                            <select>
+                            <select onChange={handleValueChange}>
                                 <option key="none" value="none">
                                     none
                                 </option>
@@ -175,7 +179,8 @@ function FilterOptions({ onFilterChange }: Props) {
                     (isLoadingAbilities ? (
                         <p>Loading abilities...</p>
                     ) : (
-                        <select>
+                        <select onChange={handleValueChange}>
+                            <option value="">Select an ability</option>
                             {abilities.map((ability) => (
                                 <option key={ability} value={ability}>
                                     {ability}

@@ -1,9 +1,10 @@
+import { useState } from "react";
 import "./App.css";
 import "./FilterOptions";
 import FilterOptions from "./FilterOptions";
 import PokemonList from "./PokemonList";
 import Footer from "./Footer";
-import type { FilterState } from "./types";
+import type { FilterState, FilterType } from "./types";
 
 function App() {
     const [currentFilter, setCurrentFilter] = useState<FilterState>({
@@ -11,10 +12,9 @@ function App() {
         value: "",
     });
 
-    const handleFilterChange = (type: FilterState, value: string) => {
+    const handleFilterChange = (type: FilterType, value: string) => {
         setCurrentFilter({ type, value });
     };
-
     return (
         <>
             <div className="main-title">
