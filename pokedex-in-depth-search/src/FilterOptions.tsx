@@ -1,6 +1,11 @@
 import React, { useState } from "react";
+import { FilterRequest, FilterType } from "./App";
 
-function FilterOptions() {
+interface Props {
+    onFilterChange: (type: FilterType, value: string) => void;
+}
+
+function FilterOptions({ onFilterChange }: Props) {
     const [radio, setRadio] = useState("name");
     const [types, setTypes] = useState<string[]>([]);
     const [isLoadingTypes, setIsLoadingTypes] = useState(false);
@@ -21,6 +26,12 @@ function FilterOptions() {
         if (e.target.value === "has-ability") {
             handleAbilitySelect();
         }
+    };
+
+    const handleValueChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
+        onFilterChange(radio, e.target.value);
     };
 
     const handleHasTypeSelect = () => {
